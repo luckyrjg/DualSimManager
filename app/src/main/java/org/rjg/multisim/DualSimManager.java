@@ -119,7 +119,7 @@ public class DualSimManager {
     }
 
     public boolean isDualSIMSupported() {
-        if (!TextUtils.isEmpty(IMEI_1) && !TextUtils.isEmpty(IMEI_2)) {
+        if (!TextUtils.isEmpty(IMEI_1) && !TextUtils.isEmpty(IMEI_2) && !(IMEI_1.equals(IMEI_2)) {
             return true;
         } else {
             return false;
