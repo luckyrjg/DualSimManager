@@ -1,4 +1,4 @@
-package org.rjg.multisim.utils;
+package org.rjg.multisim;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
