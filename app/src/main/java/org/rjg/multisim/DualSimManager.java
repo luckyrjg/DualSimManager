@@ -1,4 +1,4 @@
-package org.rjg.multisim;
+package org.rjg.multisim.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,6 +15,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * requires the permission READ_PHONE_STATE
+ */
 
 
 @SuppressLint("NewApi")
@@ -37,6 +41,7 @@ public class DualSimManager {
     private String SIM_OPERATOR_CODE_2;
     private String SIM_OPERATOR_NAME_2;
     private String SIM_NETWORK_SIGNAL_STRENGTH_2;
+
     private String NETWORK_OPERATOR_CODE_1, isGPRS_1;
     private String NETWORK_OPERATOR_CODE_2, isGPRS_2;
     private String SIMSerial_1, SIMSerial_2;
@@ -62,6 +67,37 @@ public class DualSimManager {
 
     public final static String m_SIM_OPERATOR_CODE = "getSimOperator";
     public final static String m_DATA_STATE = "getDataNetworkType";
+
+
+    /*
+        *   getDeviceIdGemini , may work for mtk chip
+        *
+        *  getDeviceIdDs, work for Samsung Duos device
+        *  getSimSerialNumberGemini, work for Lenovo A319
+        * */
+    private static String[] deviceIdMethods = {"getDeviceIdGemini", "getDeviceId", "getDeviceIdDs", "getDeviceIdExt"};
+    /*
+       *   getSimStateGemini , may work for mtk chip
+       *
+       *  getIccState, work for HTC device
+       *
+       * */
+    private static String[] networkTypeMethods = {"getSimStateGemini", "getSimState", "getIccState"};
+    /*
+       *   getNetworkTypeGemini , may work for mtk chip
+       *
+       *  getNetworkTypeExt, work for HTC device
+       *
+       * */
+    private static String[] simStatusMethods = {"getNetworkTypeGemini", "getNetworkType", "getNetworkTypeExt "};
+
+    /*
+       *   getNetworkOperatorNameGemini , may work for mtk chip
+       *
+       *  getNetworkOperatorNameExt, work for HTC device
+       *
+       * */
+    private static String[] networkOperatorNameMethods = {"getNetworkOperatorNameGemini", "getNetworkOperatorName", "getNetworkOperatorNameExt "};
 
     protected static CustomTelephony customTelephony;
 
@@ -119,7 +155,7 @@ public class DualSimManager {
     }
 
     public boolean isDualSIMSupported() {
-        if (!TextUtils.isEmpty(IMEI_1) && !TextUtils.isEmpty(IMEI_2) && !(IMEI_1.equals(IMEI_2)) {
+        if (!TextUtils.isEmpty(IMEI_1) && !TextUtils.isEmpty(IMEI_2) && !(IMEI_1.equals(IMEI_2))) {
             return true;
         } else {
             return false;
@@ -336,25 +372,45 @@ public class DualSimManager {
                         "android.telephony.TelephonyManager",
                         "android.telephony.MSimTelephonyManager",
                         "com.android.internal.telephony.Phone",
-                        "com.android.internal.telephony.PhoneFactory"};
+                        "com.android.internal.telephony.PhoneFactory",
+                        "com.lge.telephony.msim.LGMSimTelephonyManager",
+                        "com.asus.telephony.AsusTelephonyManager",
+                        "com.htc.telephony.HtcTelephonyManager"};
+
                 for (int index = 0; index < listofClass.length; index++) {
                     if (isTelephonyClassExists(listofClass[index])) {
-                        if (isMethodExists(listofClass[index], "getDeviceId")) {
-                            //System.out.println("getDeviceId method found");
-                            if (!SIM_VARINT.equalsIgnoreCase("")) {
-                                break;
+
+                        for (String deviceIdMethod : deviceIdMethods) {
+                            if (isMethodExists(listofClass[index], deviceIdMethod)) {
+                                //System.out.println("getDeviceId method found");
+                                if (!SIM_VARINT.equalsIgnoreCase("")) {
+                                    break;
+                                }
                             }
                         }
-                        if (isMethodExists(listofClass[index],
-                                "getNetworkOperatorName")) {
-							/*System.out
-									.println("getNetworkOperatorName method found");*/
-                            break;
-                        } else if (isMethodExists(listofClass[index],
-                                "getSimOperatorName")) {
-							/*System.out.println("getSimOperatorName method found");*/
-                            break;
+
+                        for (String networkOperatorNameMethod : networkOperatorNameMethods) {
+                            if (isMethodExists(listofClass[index], networkOperatorNameMethod)){
+                                //System.out.println("getNetworkOperatorName method found");
+                                if (!SIM_VARINT.equalsIgnoreCase("")) {
+                                    break;
+                                }
+                            }
                         }
+
+
+//                        if (isMethodExists(listofClass[index], "getNetworkOperatorName") ||
+//                                isMethodExists(listofClass[index], "getNetworkOperatorNameGemini") ||
+//                                isMethodExists(listofClass[index], "getNetworkOperatorNameExt")) {
+//                            /*System.out
+//									.println("getNetworkOperatorName method found");*/
+//                            break;
+//                        } else if (isMethodExists(listofClass[index],
+//                                "getSimOperatorName") || isMethodExists(listofClass[index],
+//                                "getSimOperatorNameGemini")) {
+//							/*System.out.println("getSimOperatorName method found");*/
+//                            break;
+//                        }
                     }
                 }
                 for (int index = 0; index < listofClass.length; index++) {
@@ -806,13 +862,10 @@ public class DualSimManager {
                     networkType = invokeMethod(telephonyClassName, slotNumber_2, m_NETWORK_TYPE_NAME, SIM_VARINT);
                 }
                 if (networkType.equalsIgnoreCase("")) {
-                    try {
-                        networkType = getDeviceIdBySlot("getNetworkType", slotnumber);
-                    } catch (Exception e) {
-                    }
-                    if (networkType.equalsIgnoreCase("")) {
+
+                    for(String networktype : networkTypeMethods) {
                         try {
-                            networkType = getDeviceIdBySlotOld("getNetworkTypeGemini", slotnumber);
+                            networkType = getDeviceIdBySlot(networktype, slotnumber);
                         } catch (Exception e) {
                         }
                     }
@@ -828,10 +881,10 @@ public class DualSimManager {
             return networkType;
         }
 
-        /**
-         * get neighboring cell information of the device
-         *
-         */
+        /*
+        * 电话方位：
+        *
+        */
         public int[] getCellLocation(int slot) {
             int[] cellLoc = new int[]{-1, -1};
             try {
@@ -1105,7 +1158,7 @@ public class DualSimManager {
         }
 
         /*
-        *  GSM (IMEI), CDMA(MEID)
+        * get the IMEI/MEID of the device.
         * Return null if device ID is not available.
         */
         public String getDeviceIdBySlot(String predictedMethodName, int slotID) {
