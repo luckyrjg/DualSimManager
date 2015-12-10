@@ -89,7 +89,7 @@ public class DualSimManager {
        *  getNetworkTypeExt, work for HTC device
        *
        * */
-    private static String[] simStatusMethods = {"getNetworkTypeGemini", "getNetworkType", "getNetworkTypeExt "};
+    private static String[] simStatusMethods = {"getNetworkTypeGemini", "getNetworkType", "getNetworkTypeExt"};
 
     /*
        *   getNetworkOperatorNameGemini , may work for mtk chip
@@ -97,7 +97,7 @@ public class DualSimManager {
        *  getNetworkOperatorNameExt, work for HTC device
        *
        * */
-    private static String[] networkOperatorNameMethods = {"getNetworkOperatorNameGemini", "getNetworkOperatorName", "getNetworkOperatorNameExt "};
+    private static String[] networkOperatorNameMethods = {"getNetworkOperatorNameGemini", "getNetworkOperatorName", "getNetworkOperatorNameExt"};
 
     protected static CustomTelephony customTelephony;
 
